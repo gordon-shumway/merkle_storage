@@ -1,6 +1,7 @@
 #define BOOST_TEST_MAIN
 #include <boost/test/included/unit_test.hpp>
 
+#include "../storage_block_parser.h"
 #include "../merkle_storage.h"
 #include "../storage_file.h"
 #include "../utils.h"
@@ -20,6 +21,27 @@ struct NoTestDBFixture
 			delete_file("test.db");
 	}
 };
+
+BOOST_AUTO_TEST_CASE(storage_block_parser_test)
+{
+	data_block data;
+	storage_block_parser parser(data);
+	uint8_t type = 233;
+	uint32_t idx = (ULONG_MAX >> 1) - 2;
+	bi::uint256_t val1 = (bi::uint256_max >> 1) - 2;
+	parser.set_type(type);
+	parser.set_parent_id(idx);
+	parser.set_first_child_id(idx - 2);
+	parser.set_second_child_id(idx - 4);
+	parser.set_value(val1);
+	BOOST_REQUIRE_EQUAL(parser.get_type(), type);
+	BOOST_REQUIRE_EQUAL(parser.get_parent_id(), idx);
+	BOOST_REQUIRE_EQUAL(parser.get_first_child_id(), idx - 2);
+	BOOST_REQUIRE_EQUAL(parser.get_second_child_id(), idx - 4);
+	bi::uint256_t val2(0);
+	parser.get_value(val2);
+	BOOST_REQUIRE_EQUAL(val1, val2);
+}
 
 BOOST_FIXTURE_TEST_CASE(storage_file_create_open, NoTestDBFixture)
 {
@@ -92,5 +114,16 @@ BOOST_FIXTURE_TEST_CASE(merkle_storage_create_open, NoTestDBFixture)
 	BOOST_REQUIRE_EQUAL(is_file_exists("test.db"), true);
 	BOOST_REQUIRE_THROW(merkle_storage::create("test.db"), std::exception);
 	BOOST_REQUIRE_NO_THROW(merkle_storage::open("test.db"));
+}
+
+BOOST_FIXTURE_TEST_CASE(merkle_storage_simple_read_write, NoTestDBFixture)
+{
+	auto ms = merkle_storage::create("test.db");
+	bi::uint256_t key(100500);
+	bi::uint256_t value(1);
+	BOOST_REQUIRE_NO_THROW(ms->write_value(key, value));
+	bi::uint256_t value2;
+	BOOST_REQUIRE_NO_THROW(ms->read_value(key, value2));
+	BOOST_REQUIRE_EQUAL(value, value2);
 }
 

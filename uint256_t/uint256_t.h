@@ -270,6 +270,7 @@ namespace bi
 
 	extern const uint256_t uint256_0;
 	extern const uint256_t uint256_1;
+	extern const uint256_t uint256_max;
 
 	// lhs type T as first arguemnt
 

@@ -6,6 +6,8 @@ namespace bi
 	const uint128_t uint128_256(256);
 	const uint256_t uint256_0(0);
 	const uint256_t uint256_1(1);
+	const uint256_t uint256_max(uint128_max, uint128_max);
+
 
 	uint256_t::uint256_t() {
 		UPPER = uint128_0;

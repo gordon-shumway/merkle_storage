@@ -7,6 +7,7 @@ namespace bi
 	const uint128_t uint128_1(1);
 	const uint128_t uint128_64(64);
 	const uint128_t uint128_128(128);
+	const uint128_t uint128_max(ULLONG_MAX, ULLONG_MAX);
 
 	uint128_t::uint128_t() {
 		UPPER = 0;

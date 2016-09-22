@@ -3,13 +3,7 @@
 #include <memory>
 #include <set>
 #include <cstdio>
-
-// header: type  + parent block idx + 2 child block idxs
-#define BLOCK_HEADER_SIZE (1 + 4 + 4 + 4)
-#define BLOCK_VALUE_SIZE 32
-#define BLOCK_SIZE (BLOCK_HEADER_SIZE + BLOCK_VALUE_SIZE)
-
-typedef std::array<char, BLOCK_SIZE> data_block;
+#include "common.h"
 
 class storage_file
 {

@@ -1,4 +1,5 @@
 #include "merkle_storage.h"
+#include "utils.h"
 
 using namespace bi;
 
@@ -9,7 +10,7 @@ merkle_storage::merkle_storage()
 std::unique_ptr<merkle_storage> merkle_storage::create(const std::string& file_name)
 {
 	std::unique_ptr<merkle_storage> res(new merkle_storage());
-	res->file_.create(file_name);
+	res->init_new_db(file_name);
 	return res;
 }
 
@@ -54,6 +55,15 @@ void merkle_storage::delete_value(const uint256_t& key)
 void merkle_storage::delete_value(const uint256_t& key, merkle_path& path)
 {
 	throw std::runtime_error("Not implemented");
+}
+
+void merkle_storage::init_new_db(const std::string & file_name)
+{
+	file_.create(file_name);
+	uint32_t root_idx = file_.next_available_block_idx();
+	data_block root;
+	root[0] = 2; // hash node
+	
 }
 
 bool merkle_storage::does_key_exist(const uint256_t& key, merkle_path& path)

@@ -274,6 +274,7 @@ namespace bi
 	extern const uint128_t uint128_1;
 	extern const uint128_t uint128_64;
 	extern const uint128_t uint128_128;
+	extern const uint128_t uint128_max;
 
 	// lhs type T as first arguemnt
 	// If the output is not a bool, casts to type T

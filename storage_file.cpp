@@ -1,5 +1,6 @@
 #include "storage_file.h"
 #include "utils.h"
+#include "storage_block_parser.h"
 #include <array>
 #include <iterator>
 
@@ -144,10 +145,11 @@ void storage_file::write_free_blocks_info()
 	// add old blocks with free block info to the list
 	uint32_t idx = 0;
 	data_block data;
+	storage_block_parser parser(data);
 	while (true)
 	{
 		read_block(idx, data);
-		idx = merge4x8to32(data, 5);
+		idx = parser.get_first_child_id();
 		if(idx > 0)
 			free_blocks_.insert(idx);
 		else
@@ -159,21 +161,19 @@ void storage_file::write_free_blocks_info()
 	std::set<uint32_t> free_blocks(free_blocks_);
 	while (true)
 	{
-		data.fill(0);
-		data[0] = 1;
+		parser.clear();
+		parser.set_type(STORAGE_FREE_INFO_BLOCK_TYPE);
 		count = 0;
 		while (!free_blocks.empty())
 		{
-			split32to4x8(data, 
-				BLOCK_HEADER_SIZE + count * sizeof(uint32_t),
-				*free_blocks.begin());
+			parser.set_32value(count, *free_blocks.begin());
 			count++;
 			free_blocks.erase(free_blocks.begin());
 			if (count == max_count)
 				break;
 		}
-		split32to4x8(data, 1, parent_idx);
-		split32to4x8(data, 9, count);
+		parser.set_parent_id(parent_idx);
+		parser.set_second_child_id(count);
 		if (free_blocks.empty())
 		{
 			write_block(idx, data);
@@ -181,7 +181,7 @@ void storage_file::write_free_blocks_info()
 		}
 		parent_idx = idx;
 		idx = *free_blocks.begin();
-		split32to4x8(data, 5, idx);
+		parser.set_first_child_id(idx);
 		free_blocks.erase(idx);
 		free_blocks_.erase(idx);
 		write_block(parent_idx, data);
@@ -195,13 +195,14 @@ void storage_file::read_free_blocks_info()
 	free_blocks_.clear();
 	uint32_t idx = 0;
 	data_block data;
+	storage_block_parser parser(data);
 	while (true)
 	{
 		read_block(idx, data);
-		idx = merge4x8to32(data, 5);
-		uint32_t count = merge4x8to32(data, 9);
+		idx = parser.get_first_child_id();
+		uint32_t count = parser.get_second_child_id();
 		for (uint32_t i = 0; i < count; i++)
-			free_blocks_.insert(merge4x8to32(data, BLOCK_HEADER_SIZE + i * 4));
+			free_blocks_.insert(parser.get_32value(i));
 		if (idx == 0)
 			break;
 	}
