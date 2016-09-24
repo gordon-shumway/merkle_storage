@@ -72,6 +72,46 @@ void merkle_storage::delete_value(const uint256_t& key, merkle_path& path)
 		throw std::runtime_error("Deleting nonexisting key");
 	uint32_t value_block_idx = get_value_block_id(key, path);
 	file_.free_block(value_block_idx);
+	uint32_t idx = get_value_parent_block_idx(key, path);
+	data_block data;
+	storage_block_parser parser(data);
+	file_.read_block(idx, data);
+	file_.free_block(idx);
+	uint32_t parent_idx = parser.get_parent_id();
+	while (parent_idx != 0)
+	{
+		file_.read_block(parent_idx, data);
+		if (parser.get_first_child_id() == idx)
+		{
+			if (parser.get_second_child_id() != 0)
+			{
+				parser.set_first_child_id(0);
+				file_.write_block(parent_idx, data);
+				break;
+			}
+		}
+		else
+		{
+			if (parser.get_first_child_id() != 0)
+			{
+				parser.set_second_child_id(0);
+				file_.write_block(parent_idx, data);
+				break;
+			}
+		}
+		if (parent_idx == MERKLE_ROOT_BLOCK)
+		{
+			parser.set_first_child_id(0);
+			parser.set_second_child_id(0);
+			file_.write_block(parent_idx, data);
+		}
+		else
+		{
+			file_.free_block(parent_idx);
+		}
+		idx = parent_idx;
+		parent_idx = parser.get_parent_id();
+	}
 }
 
 void merkle_storage::init_new_db(const std::string & file_name)
@@ -83,6 +123,11 @@ void merkle_storage::init_new_db(const std::string & file_name)
 	parser.clear();
 	parser.set_type(MERKLE_NODE_BLOCK_TYPE);
 	file_.write_block(root_idx, root);
+}
+
+bool merkle_storage::does_key_exist(const bi::uint256_t & key)
+{
+	return does_key_exist(key, local_path_stub_);
 }
 
 bool merkle_storage::does_key_exist(const uint256_t& key, merkle_path& path)

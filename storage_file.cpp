@@ -146,14 +146,15 @@ void storage_file::write_free_blocks_info()
 	uint32_t idx = 0;
 	data_block data;
 	storage_block_parser parser(data);
+	read_block(idx, data);
+	idx = parser.get_first_child_id();
 	while (true)
 	{
-		read_block(idx, data);
-		idx = parser.get_first_child_id();
-		if(idx > 0)
-			free_blocks_.insert(idx);
-		else
+		if (idx == 0)
 			break;
+		read_block(idx, data);
+		free_blocks_.insert(idx);
+		idx = parser.get_first_child_id();
 	}
 	uint32_t parent_idx = 0;
 	uint32_t count = 0;

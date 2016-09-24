@@ -103,6 +103,20 @@ BOOST_FIXTURE_TEST_CASE(storage_file_free_blocks, NoTestDBFixture)
 		idx2 = storage.next_available_block_idx();
 	}
 	BOOST_REQUIRE_EQUAL(idx1, idx2);
+	storage_file storage;
+	storage.open("test.db");
+	uint32_t idx;
+	data_block b;
+	b.fill(5);
+	for (unsigned i = 0; i < 100; i++)
+	{
+		idx = storage.next_available_block_idx();
+		BOOST_REQUIRE_NO_THROW(storage.write_block(idx, b));
+	}
+	for (unsigned i = 2; i < 90; i++)
+	{
+		BOOST_REQUIRE_NO_THROW(storage.free_block(i));
+	}
 }
 
 BOOST_FIXTURE_TEST_CASE(merkle_storage_create_open, NoTestDBFixture)
@@ -125,5 +139,34 @@ BOOST_FIXTURE_TEST_CASE(merkle_storage_simple_read_write, NoTestDBFixture)
 	bi::uint256_t value2;
 	BOOST_REQUIRE_NO_THROW(ms->read_value(key, value2));
 	BOOST_REQUIRE_EQUAL(value, value2);
+}
+
+BOOST_FIXTURE_TEST_CASE(merkle_storage_read_write_delete, NoTestDBFixture)
+{
+	auto ms = merkle_storage::create("test.db");
+	bi::uint256_t key1(100500);
+	bi::uint256_t value1(1);
+	bi::uint256_t key2(123456);
+	bi::uint256_t value2(2);
+	ms->write_value(key1, value1);
+	ms->write_value(key2, value2);
+	bi::uint256_t value3;
+	ms->read_value(key1, value3);
+	BOOST_REQUIRE_EQUAL(value3, value1);
+	ms->read_value(key2, value3);
+	BOOST_REQUIRE_EQUAL(value3, value2);
+	ms->write_value(key1, value2);
+	ms->read_value(key1, value3);
+	BOOST_REQUIRE_EQUAL(value3, value2);
+	BOOST_REQUIRE_EQUAL(ms->does_key_exist(key1), true);
+	BOOST_REQUIRE_EQUAL(ms->does_key_exist(key2), true);
+	BOOST_REQUIRE_NO_THROW(ms->delete_value(key1));
+	BOOST_REQUIRE_EQUAL(ms->does_key_exist(key1), false);
+	BOOST_REQUIRE_EQUAL(ms->does_key_exist(key2), true);
+	BOOST_REQUIRE_NO_THROW(ms->read_value(key2, value3));
+	BOOST_REQUIRE_EQUAL(value3, value2);
+	BOOST_REQUIRE_THROW(ms->read_value(key1, value3), std::exception);
+	BOOST_REQUIRE_THROW(ms->delete_value(key1), std::exception);
+	BOOST_REQUIRE_NO_THROW(ms->write_value(key1, value1));
 }
 
