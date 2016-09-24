@@ -8,8 +8,7 @@
 #define FREE_BLOCK_TYPE 0
 #define STORAGE_FREE_INFO_BLOCK_TYPE 1
 #define MERKLE_NODE_BLOCK_TYPE 2
-#define MERKLE_LEAF_BLOCK_TYPE 3
-#define VALUE_BLOCK_TYPE 4
+#define VALUE_BLOCK_TYPE 3
 
 // header: type  + parent block idx + 2 child block idxs
 #define BLOCK_HEADER_SIZE (1 + 4 + 4 + 4)
